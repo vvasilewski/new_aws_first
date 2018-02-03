@@ -1,0 +1,101 @@
+<div class="clearfix">
+    <h3>File list on Amazon</h3>
+
+    <div class="pull-right">
+        <button id="rotate" class="btn">Colorize selected</button>
+    </div>
+
+    <div class="well hidden add-ok clearfix">
+        File added to queue.
+    </div>
+
+    <div class="well hidden colorized-ok clearfix">
+        Image colorized successfully.
+    </div>
+
+    <div class="well hidden colorized-error clearfix">
+        Image colorized failure.
+    </div>
+
+    <div class="well hidden add-error clearfix">
+        Error adding to queue.
+    </div>
+
+    <table class="table table-hover" style="clear: both;">
+        <thead>
+            <tr>
+                <th>Check</th>
+                <th>Image</th>
+                <th>File path</th>
+                <th>File name</th>
+                <th>Content Type</th>
+                <th>Last modified</th>
+            </tr>
+        </thead>
+        <% for(var i = 0; i < fileList.length; i++) { %>
+        <tr data-id="<%= fileList[i].key %>">
+            <td style="vertical-align: middle;"><input type="checkbox" value="" id="<%= fileList[i].bucket %>/<%= fileList[i].key %>"></td>
+            <td style="vertical-align: middle;"><img height="100" src="https://s3.amazonaws.com/<%= fileList[i].bucket %>/<%= fileList[i].key %>" /></td>
+            <td style="vertical-align: middle;"> <%= fileList[i].key %> </td>
+            <td style="vertical-align: middle;"> <%= fileList[i].filename %> </td>
+            <td style="vertical-align: middle;"> <%= fileList[i].type %> </td>
+            <td style="vertical-align: middle;"> <%= fileList[i].lastModified %> </td>
+        </tr>
+        <% } %>
+
+    </table>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost:1337/');
+        socket.on('connect', function () {
+            console.log('socket connected to :1337');
+        });
+
+        socket.on('colorized', function (res) {
+            var d = new Date();
+            //console.log(res);
+
+            if (res != 'err') {
+                $("[data-id='" + res + "']").find("img").attr("src", "https://s3.amazonaws.com/wasilewskibucket/" + res + "?" + d.getTime());
+                console.log('during colorize');
+                $('.colorized-ok').removeClass('hidden');
+            } else {
+                $('.colorized-error').removeClass('hidden');
+            }
+
+            setTimeout(function () {
+                $('.colorized-ok').addClass('hidden');
+                $('.colorized-error').addClass('hidden');
+            }, 3000);
+        });
+
+        $('#rotate').click(function () {
+            $('input:checkbox').each(function (i) {
+//                console.log($(this));
+                if ($(this).is(':checked')) {
+                    var id = $(this).attr('id');
+//                    console.log(id);
+                    $.ajax({
+                        method: 'post',
+                        dataType: "json",
+                        url: "/filelist/rotate",
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            id: id
+                        })
+                    }).done(function () {
+//                        if ()
+                        $('.add-ok').removeClass('hidden');
+                        socket.emit('checkQueue');
+
+                        setTimeout(function () {
+                            $('.add-ok').addClass('hidden');
+                        }, 1500);
+                    });
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,18 @@
+<h3>Bucket list on Amazon</h3>
+
+<table class="table">
+	<thead>
+		<tr>
+			<th>Bucket name</th>
+			<th>Creation date</th>
+		</tr>
+	</thead>
+	<% for(var i = 0; i < bucketList.length; i++) { %>
+	<tr>
+		<td><a href='get/<%= bucketList[i]["Name"] %>'> <%= bucketList[i]['Name'] %> </a></td>
+		<td> <%= bucketList[i]['CreationDate'] %> </td>
+
+	</tr>
+	<% } %>
+
+</table>
